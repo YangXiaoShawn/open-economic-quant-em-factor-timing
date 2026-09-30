@@ -1,0 +1,31 @@
+title: "Do Factor Premia Travel? Machine-Learning Factor Timing in Emerging-Market Equities"
+slug: em-factor-timing
+summary: Out-of-sample study of time variation in equity factor returns across 22 emerging markets, the transfer of forecasting models trained on developed markets, and the value of factor timing net of trading costs.
+research_question: Is the predictability of equity factor returns documented in developed markets present in emerging markets, and does a model trained on developed-market history forecast emerging-market factor returns out of sample, net of the costs of acting on the forecast?
+why_it_matters: In multi-country factor panels the standard historical-mean benchmark can be beaten by pooling noisy means across countries, so tests against it credit timing ability that is only better estimation of unconditional premia.
+research_fields:
+  - Asset pricing
+  - Financial econometrics
+  - Machine learning
+project_type: empirical-research
+status: private-draft
+authors:
+  - Repository owner and maintainer
+original_sample_period: JKP factor returns from 1926 (United States) and 1986 onward for most other markets.
+updated_sample_period: Data through 2025-12 (files downloaded 2026-09-29); out-of-sample evaluation 2000-01 through 2025-12.
+data_sources:
+  - Jensen, Kelly and Pedersen (2023) global factor returns, jkpfactors.com
+  - MSCI market classification and reclassification announcements
+data_license: JKP data are distributed under CC BY-NC 4.0 and are not redistributed here; the repository holds code, configuration, aggregated results and the paper draft.
+code_license: No repository license declared; copyright remains with the repository owner.
+reproduction_command: make test && make run && make robustness && make tables && make paper
+expected_runtime: About 17 minutes for the main run with the neural network and 20 minutes for the robustness reruns on a 10-core laptop with 16 GB of memory; tests take seconds.
+outputs:
+  - src/
+  - reports/
+  - tests/
+  - paper/
+  - config/
+github_url: https://github.com/YangXiaoShawn/open-economic-quant-em-factor-timing
+last_updated: 2026-09-29
+limitations: Evidence is out-of-sample predictive comparison, not identification; factor returns are gross of their own rebalancing costs and signed by the original studies, so Sharpe ratio levels are inflated; the time-varying classification models reclassifications but not first index inclusion; hyperparameters are fixed, not tuned.

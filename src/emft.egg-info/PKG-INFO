@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: emft
+Version: 0.1.0
+Summary: Do factor premia travel? Out-of-sample machine-learning factor timing in emerging-market equities.
+Requires-Python: >=3.11
+Requires-Dist: numpy>=1.26
+Requires-Dist: pandas>=2.1
+Requires-Dist: scikit-learn>=1.4
+Requires-Dist: scipy>=1.11
+Requires-Dist: matplotlib>=3.8
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
