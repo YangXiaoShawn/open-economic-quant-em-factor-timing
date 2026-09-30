@@ -117,7 +117,7 @@ def build_features(panel: pd.DataFrame, hist_min: int = 24, kappa: float = 120.0
     return out
 
 
-def model_ready(features: pd.DataFrame) -> pd.DataFrame:
-    """Rows with a realised target, a benchmark and every feature observed."""
-    need = FEATURES + ["hist_mean", "shrink_mean", "target"]
+def model_ready(features: pd.DataFrame, extra: tuple[str, ...] = ()) -> pd.DataFrame:
+    """Rows with a realised target, a benchmark and every feature (and extra column) observed."""
+    need = FEATURES + list(extra) + ["hist_mean", "shrink_mean", "target"]
     return features.dropna(subset=need).reset_index(drop=True)

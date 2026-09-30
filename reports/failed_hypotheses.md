@@ -27,3 +27,14 @@ out of sample 2000–2025, unless stated.
    testing. `reports/jkp_em/transfer_by_country_enet.csv`.
 8. **Two markets drop out.** The Czech Republic and Hungary have no out-of-sample
    observations after the five-stock filter (`reports/jkp_em/coverage.csv`).
+9. **U.S. state variables hurt.** Adding log VIX, the 10y–3m Treasury spread and the
+   12-month dollar change makes every model worse on the matched 1990+ sample; trees fall
+   to R²_OS −0.38% (EM-trained) / −1.05% (DM-trained) with CW t 1.37 / 0.58.
+   `reports/jkp_em_macro/` vs `reports/jkp_em_from1990/`.
+10. **Real-time forecast shrinkage does not make capped-VW forecasts beat the benchmark.**
+    R²_OS improves for every model but stays negative (best −0.02%); EM-trained linear
+    models' CW t falls to 0.8–0.9. Its EM-trained portfolios beat static (1.51–1.71 vs
+    1.48), the DM-trained ones do not (1.02–1.48), and none beats the shrinkage-mean tilt. This extension was chosen after seeing the full-sample slope diagnostic.
+    `reports/jkp_em_rs/`.
+11. **Break-even costs are low on value-weighted factors** (≤ 16 bp per unit of turnover;
+    the DM-trained elastic net never beats static). `reports/robustness/breakeven.csv`.

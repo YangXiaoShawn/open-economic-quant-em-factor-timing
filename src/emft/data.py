@@ -53,6 +53,41 @@ def load_markets(path: Path = MARKETS_FILE) -> Markets:
     return Markets(frozenset(cfg["developed"]), frozenset(cfg["emerging"]))
 
 
+MACRO_FEATURES = ["mac_vix", "mac_term", "mac_usd12"]
+
+
+def load_macro(directory: str | Path) -> pd.DataFrame:
+    """Monthly U.S. state variables from FRED CSVs (fredgraph.csv layout), indexed by Period[M].
+
+    mac_vix    log of the last VIX close in the month (VIXCLS, from 1990)
+    mac_term   last 10-year minus 3-month Treasury spread in the month (T10Y3M, percent)
+    mac_usd12  12-month log change of the broad trade-weighted dollar: the discontinued
+               monthly TWEXBMTH through 2005-12, then the monthly average of DTWEXBGS,
+               level-spliced at 2006-01 (the two indexes differ in coverage)
+    Every value dated t is observable at the end of month t.
+    """
+    d = Path(directory)
+
+    def series(name: str) -> pd.Series:
+        f = pd.read_csv(d / f"{name}.csv")
+        s = pd.to_numeric(f.iloc[:, 1], errors="coerce")
+        s.index = pd.to_datetime(f.iloc[:, 0]).dt.to_period("M")
+        return s.dropna()
+
+    vix = series("VIXCLS").groupby(level=0).last()
+    term = series("T10Y3M").groupby(level=0).last()
+    old = np.log(series("TWEXBMTH").groupby(level=0).mean())
+    new = np.log(series("DTWEXBGS").groupby(level=0).mean())
+    splice = pd.Period("2006-01", freq="M")
+    if splice not in old.index or splice not in new.index:
+        raise ValueError("TWEXBMTH and DTWEXBGS must both cover 2006-01 to splice the dollar index")
+    usd = pd.concat([old[old.index < splice], new[new.index >= splice] + old[splice] - new[splice]])
+    usd = usd.reindex(pd.period_range(usd.index.min(), usd.index.max(), freq="M"))
+    out = pd.DataFrame({"mac_vix": np.log(vix), "mac_term": term, "mac_usd12": usd - usd.shift(12)})
+    out.index.name = "month"
+    return out
+
+
 MARKET_HISTORY_FILE = ROOT / "config" / "market_history.yaml"
 
 

@@ -23,7 +23,16 @@ weighting, direction, n_stocks, n_stocks_min, date, ret`; returns are decimals.
 Pedersen (2023, *Journal of Finance*); do not redistribute the raw files. The
 repository only holds aggregated results derived from them.
 
+## U.S. state variables (extension)
+
+`data/raw_macro/`: FRED series saved as downloaded from
+`https://fred.stlouisfed.org/graph/fredgraph.csv?id=<SERIES>` on 2026-09-30 —
+`VIXCLS` (from 1990), `T10Y3M` (from 1982), `TWEXBMTH` (broad dollar index, monthly,
+1973–2019, discontinued) and `DTWEXBGS` (broad dollar index, daily, from 2006).
+`emft.data.load_macro` documents the transformations and the 2006-01 splice.
+
 ## Market classification
 
 `config/markets.yaml` (current MSCI classification) and `config/market_history.yaml`
-(dated MSCI reclassifications, each with its source).
+(dated MSCI reclassifications, each with its source). MSCI's own list, "Previous Market Reclassifications.xlsx"
+(downloaded 2026-09-30 into `data/raw_msci/`), was used to cross-check the events.

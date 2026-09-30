@@ -74,6 +74,16 @@ paper `paper/draft.pdf`.
   learned timing portfolio beats static net of 20 bp (2.28–3.08 vs 2.01), though not the
   tilt (3.90). Linear-model timing evidence is fragile (CW 0.8–1.5 with κ = 240, 1.3–1.5
   on uncapped VW factors); EM-trained trees fail on uncapped VW factors (t = 1.21).
+- **Break-even costs** (`reports/robustness/breakeven.csv`): on value-weighted factors a
+  timing portfolio beats static only below 3–16 bp per unit of turnover (the DM-trained
+  elastic net never does); on equal-weighted factors below 30–48 bp.
+- **Exploratory extensions** (chosen after seeing the results; `reports/robustness/extensions.csv`).
+  *Real-time forecast shrinkage* (`<model>_rs`: slope estimated in the last 36 months of each
+  training window, clipped to [0, 1]) cuts turnover by a third to a half; EM-trained timing
+  portfolios reach net Sharpe 1.51–1.71 vs static 1.48, but R²_OS on capped VW factors stays
+  negative and every portfolio stays below the tilt (1.91; EW 3.65 vs 3.90). *U.S. state
+  variables* (log VIX, 10y–3m spread, 12-month dollar change; FRED) make every model worse on
+  the matched 1990+ sample (trees: R²_OS −0.38% / −1.05%, CW 1.37 / 0.58).
 - Sharpe levels are inflated because factor returns are gross of their own rebalancing
   costs and signed by the original studies; read them comparatively. Negative and fragile
   results are listed in `reports/failed_hypotheses.md`.
@@ -82,20 +92,22 @@ paper `paper/draft.pdf`.
 
 | Layer | State |
 |---|---|
-| Pipeline, tests, synthetic validation | complete — 13 tests pass; size/power in `reports/validation/` |
+| Pipeline, tests, synthetic validation | complete — 15 tests pass; size/power in `reports/validation/` |
 | Real-data run on JKP factors | complete — `reports/jkp_em/` (OLS, elastic net, trees, neural net) |
-| Robustness | complete for κ, OOS start, factor weighting, time-varying classification, costs; macro states and size-dependent costs pending |
-| Paper draft | `paper/draft.pdf` (17 pp.), every table generated from the runs |
+| Robustness | complete for κ, OOS start, factor weighting, time-varying classification, costs, break-even costs; size-dependent costs pending |
+| Extensions | real-time forecast shrinkage and U.S. state variables (exploratory) |
+| Paper draft | `paper/draft.pdf` (19 pp.), every table generated from the runs |
 
 ## Run it
 
 ```bash
 pip install -e ".[dev]"          # or: pip install numpy pandas scikit-learn scipy matplotlib pyyaml pyarrow pytest
-make test                         # 13 tests: loader, no look-ahead leakage, market history, signal recovery, null, transfer
+make test                         # 15 tests: loader, macro, leakage, market history, recovery, null, transfer, real-time shrinkage
 make validate                     # size/power simulation (~3 min)
 make demo                         # full pipeline on synthetic data (~8 min)
 make run                          # main real-data run incl. neural net (~17 min); files in data/raw/
-make robustness                   # kappa, EW/VW, time-varying classification reruns + table (~25 min)
+make robustness                   # kappa, EW/VW, time-varying classification reruns + tables (~25 min)
+make extensions                   # real-time shrinkage and U.S. state-variable runs + table (~20 min)
 make tables                       # paper/tables/*.tex and the figure from reports/jkp_em
 make paper                        # pdflatex; or: .tools/tectonic -X compile paper/draft.tex
 ```

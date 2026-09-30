@@ -27,6 +27,10 @@ from .features import FEATURES
 
 LEARNED = ("ols", "enet", "gbrt", "nn")
 RULES = ("hist_mean", "shrink_mean", "fmom")
+# Real-time forecast shrinkage: "<model>_rs" scales the model's forecast deviation from
+# the shrinkage mean by a slope estimated inside the training window (see Forecaster.fit).
+SCALED = tuple(f"{m}_rs" for m in LEARNED)
+RS_VALIDATION_MONTHS = 36
 
 
 def _winsorise(y: np.ndarray, lo: float = 0.005, hi: float = 0.995) -> np.ndarray:
@@ -39,16 +43,20 @@ class Forecaster:
     name: str
     seed: int = 0
     max_train_rows: int = 400_000  # subsample very large panels for the tree/NN fits
+    scale: float = 1.0  # multiplies the forecast deviation; estimated in fit for "_rs" models
+    features: tuple[str, ...] = tuple(FEATURES)
     _models: list = field(default_factory=list, repr=False)
 
     def fit(self, train: pd.DataFrame) -> "Forecaster":
         if self.name in RULES:
             return self
+        if self.name in SCALED:
+            return self._fit_scaled(train)
         rng = np.random.default_rng(self.seed)
         cap = self.max_train_rows if self.name == "gbrt" else self.max_train_rows // 3
         if len(train) > cap and self.name in ("gbrt", "nn"):
             train = train.iloc[rng.choice(len(train), cap, replace=False)]
-        X = train[FEATURES].to_numpy()
+        X = train[list(self.features)].to_numpy()
         y = _winsorise(train["target"].to_numpy())
         # Learn only the deviation from the shrunk historical mean, so a learned
         # model is credited for forecasting time variation, not for re-estimating
@@ -57,6 +65,35 @@ class Forecaster:
         self._models = [self._make(s).fit(X, y) for s in self._seeds()]
         return self
 
+    def _fit_scaled(self, train: pd.DataFrame) -> "Forecaster":
+        """Fit the base model, then shrink its forecasts by a slope estimated without future data.
+
+        The base model is fitted on training rows whose target month precedes the last
+        RS_VALIDATION_MONTHS months of the window and predicts those months; the slope of
+        the realised deviation from the shrinkage mean on the forecast deviation, clipped
+        to [0, 1], is the scale. The base model is then refitted on the whole window.
+        With no usable validation split the scale stays 1 (no shrinkage).
+        """
+        base = self.name[: -len("_rs")]
+        cut = train["target_month"].max() - (RS_VALIDATION_MONTHS - 1)
+        inner, val = train[train["target_month"] < cut], train[train["target_month"] >= cut]
+        self.scale = 1.0
+        if len(inner) and len(val):
+            x = self._base(base).fit(inner).deviation(val)
+            y = (val["target"] - val["shrink_mean"]).to_numpy()
+            if x @ x > 0:
+                self.scale = float(np.clip(x @ y / (x @ x), 0.0, 1.0))
+        self._models = self._base(base).fit(train)._models
+        return self
+
+    def _base(self, name: str) -> "Forecaster":
+        return Forecaster(name, self.seed, self.max_train_rows, features=self.features)
+
+    def deviation(self, test: pd.DataFrame) -> np.ndarray:
+        """Forecast of the return in excess of the shrinkage mean (learned models only)."""
+        X = test[list(self.features)].to_numpy()
+        return np.mean([m.predict(X) for m in self._models], axis=0)
+
     def predict(self, test: pd.DataFrame) -> np.ndarray:
         if self.name == "hist_mean":
             return test["hist_mean"].to_numpy()
@@ -64,9 +101,7 @@ class Forecaster:
             return test["shrink_mean"].to_numpy()
         if self.name == "fmom":
             return test["own_m12"].to_numpy()
-        X = test[FEATURES].to_numpy()
-        dev = np.mean([m.predict(X) for m in self._models], axis=0)
-        return test["shrink_mean"].to_numpy() + dev
+        return test["shrink_mean"].to_numpy() + self.scale * self.deviation(test)
 
     def _seeds(self) -> list[int]:
         # The neural net is an ensemble over initialisations (as in Gu, Kelly and Xiu 2020).

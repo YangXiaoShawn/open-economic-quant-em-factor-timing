@@ -33,8 +33,15 @@
 #   [RUS22] MSCI, 2 Mar 2022: Russia Emerging -> Standalone as of the close of 9 Mar 2022
 #          https://www.businesswire.com/news/home/20220302006111/en/MSCI-to-Reclassify-the-MSCI-Russia-Indexes-from-Emerging-Markets-to-Standalone-Markets-Status
 #
-# Cross-check still to do: MSCI's "Previous Market Reclassifications.xlsx"
-# (linked from https://www.msci.com/our-solutions/indexes/market-classification).
+#   [XLSX] MSCI, "Previous Market Reclassifications.xlsx", linked from
+#          https://www.msci.com/our-solutions/indexes/market-classification
+#          (downloaded 2026-09-30; kept in data/raw_msci/, not committed)
+#
+# Cross-check against [XLSX], 2026-09-30: every event below matches its effective month
+# there (Pakistan's Dec 2008 removal appears as its footnoted standalone -> frontier move
+# of May 2009). [XLSX] lists no other change involving Developed or Emerging status for
+# the 1986-2025 sample; its remaining rows move markets between Frontier and Standalone
+# (both OTHER here) or record China A-share partial inclusion (2018), which is not modelled.
 
 events:
   - {country: prt, from_month: 1997-12, was: EM, region: DM, note: "Emerging -> Developed, Nov 1997", source: MCR}

@@ -16,6 +16,7 @@ import logging
 
 import pandas as pd
 
+from .features import FEATURES
 from .models import LEARNED, RULES, Forecaster
 
 log = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ def run_backtest(
     oos_start: int = 2000,
     min_train_months: int = 120,
     seed: int = 0,
+    features: tuple[str, ...] = tuple(FEATURES),
 ) -> pd.DataFrame:
     """Return one row per (test observation, model, scope) with the forecast."""
     last_year = int(data["target_month"].max().year)
@@ -57,11 +59,12 @@ def run_backtest(
             for name in models:
                 if name in RULES and scope != "own":
                     continue  # rules do not train, one copy is enough
-                f = Forecaster(name, seed=seed).fit(train)
+                f = Forecaster(name, seed=seed, features=features).fit(train)
                 pred = test[["month", "target_month", "country", "factor", "region", "target", "hist_mean", "shrink_mean", "own_m12"]].copy()
                 pred["model"] = name
                 pred["scope"] = scope if name not in RULES else "rule"
                 pred["pred"] = f.predict(test)
+                pred["scale"] = f.scale
                 out.append(pred)
         log.info("year %d: trained on %d rows, tested on %d", year, len(train_sets["own"]), len(test))
 

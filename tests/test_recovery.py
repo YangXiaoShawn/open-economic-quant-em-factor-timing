@@ -28,6 +28,18 @@ def test_no_false_discovery_without_signal():
     assert abs(t.loc[("shrink_mean", "rule"), "r2_vs_shrink_pct"]) < 1e-9
 
 
+def test_real_time_forecast_shrinkage_is_bounded_and_anchored():
+    panel, _ = synthetic_panel(n_dm=4, n_em=4, n_factors=8, n_months=240, signal_sd=0.004, seed=5)
+    data = model_ready(build_features(panel))
+    preds = run_backtest(data, models=("ols", "ols_rs"), scopes=("own",), oos_start=2005)
+    rs, base = preds[preds["model"] == "ols_rs"], preds[preds["model"] == "ols"]
+    assert rs["scale"].between(0, 1).all() and (base["scale"] == 1).all()
+    # same fitted model, deviation scaled by the year's slope estimated inside the training window
+    dev_rs = (rs["pred"] - rs["shrink_mean"]).to_numpy()
+    dev = (base["pred"] - base["shrink_mean"]).to_numpy()
+    assert abs(dev_rs - rs["scale"].to_numpy() * dev).max() < 1e-12
+
+
 def test_developed_market_training_transfers_when_premia_are_shared():
     t = _table(signal_sd=0.008, scopes=("dm_only",), models=("ols",))
     assert t.loc[("ols", "dm_only"), "r2_vs_shrink_pct"] > 0.3
