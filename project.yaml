@@ -8,7 +8,7 @@ research_fields:
   - Financial econometrics
   - Machine learning
 project_type: empirical-research
-status: private-draft
+status: public-draft
 authors:
   - Repository owner and maintainer
 original_sample_period: JKP factor returns from 1926 (United States) and 1986 onward for most other markets.

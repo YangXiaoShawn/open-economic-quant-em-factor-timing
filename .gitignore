@@ -13,3 +13,4 @@ paper/*.fdb_latexmk
 .venv/
 *.log
 .tools/
+.DS_Store
