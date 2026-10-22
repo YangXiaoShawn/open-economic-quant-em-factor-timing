@@ -2,7 +2,14 @@ PY ?= python3
 DATA ?= data/raw/
 export PYTHONPATH := src
 
-.PHONY: test validate demo run coverage robustness extensions tables paper
+.PHONY: setup test validate demo reproduce-sample run coverage robustness extensions tables paper check
+
+setup:
+	$(PY) -m pip install -e ".[dev]"
+
+reproduce-sample: demo
+
+check: test
 
 test:
 	$(PY) -m pytest -q
